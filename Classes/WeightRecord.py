@@ -1,5 +1,3 @@
-import datetime
-
 
 class WeightRecord:
 
@@ -14,21 +12,24 @@ class WeightRecord:
 
     def get_weight_lb_delta(self):
         if self.last_weight_record:
-            return self.weight_lb - self.last_weight_record.weight_lb
+            return round(self.weight_lb - self.last_weight_record.weight_lb, 2)
         return None
 
-    def add_to_google_sheet(self, sheet):
-        row = [
+    def get_data_row(self):
+        return [
             self.dt.strftime("%Y/%m/%d %H:%M %p"),
             self.weight_lb,
             self.weight_kg,
             self.weight_lb_delta
         ]
-        sheet.append_row(row)
+
+    def add_to_google_sheet(self, sheet):
+        sheet.append_row(self.get_data_row(), value_input_option='USER_ENTERED')
 
     def __str__(self):
-        return "WeightRecord | dt={}, weight_lb={}, weight_kg={}".format(
+        return "WeightRecord | dt={}, weight_lb={}, weight_kg={}, weight_lb_delta={}".format(
             self.dt,
             self.weight_lb,
-            self.weight_kg
+            self.weight_kg,
+            self.weight_lb_delta
         )
