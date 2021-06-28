@@ -1,8 +1,6 @@
 import gspread
 import discord
 import datetime
-import pyperclip
-import pandas as pd
 from oauth2client.service_account import ServiceAccountCredentials
 
 from Classes import WeightRecord
@@ -47,27 +45,29 @@ def weight_command(value):
     )
     curr_record.add_to_google_sheet(weight_tracker_sheet)
 
-    ret_str = "Weight record added!"
-    if curr_record.weight_lb_delta == 0:
-        ret_str += " There has been no weight change since {}.".format(
-            curr_record.last_weight_record.dt.strftime("%Y/%m/%d")
-        )
-    elif curr_record.weight_lb_delta < 0:
-        ret_str += " Congrats! You've lost {} since {}.".format(
-            curr_record.weight_lb_delta,
-            curr_record.last_weight_record.dt.strftime("%Y/%m/%d")
-        )
-    else:
-        ret_str += " Yikes! You've gained {} since {}.".format(
-            curr_record.weight_lb_delta,
-            curr_record.last_weight_record.dt.strftime("%Y/%m/%d")
-        )
+    emote, gained_or_lost = ("Yikes!", "gained") if curr_record.weight_lb_delta >= 0 else ("Congrats!", "lost")
+
+    day_delta = curr_record.dt.day - curr_record.last_weight_record.dt.day
+    time_since = "{} days ago".format(day_delta) if day_delta > 1 else "yesterday"
+
+    ret_str = "Weight record added! "
+    ret_str += "{} You've {} {} since {}.".format(
+        emote,
+        gained_or_lost,
+        curr_record.weight_lb_delta,
+        time_since
+    )
     return ret_str
 
 
 def main():
 
     client = discord.Client()
+
+    @client.event
+    async def on_ready():
+        for guild in client.guilds:
+            print(guild.name)
 
     @client.event
     async def on_message(message):
@@ -90,7 +90,8 @@ def main():
                 else:
                     await message.channel.send("WeightCommand: no weight given")
             else:
-                await message.channel.send("I don't know that command...")
+                # await message.channel.send("I don't know that command...")
+                print(message.author)
 
     client.run(Constants.discord_credentials)
 
